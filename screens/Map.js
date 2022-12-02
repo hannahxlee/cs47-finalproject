@@ -1,7 +1,6 @@
 import React, { useState, Component } from "react";
 import {
   Text,
-  TouchableOpacity,
   Dimensions,
   StyleSheet,
   View,
@@ -9,6 +8,7 @@ import {
   SafeAreaView,
   Pressable,
   Modal,
+  Image,
   Button,
 } from "react-native";
 import MapView, { Marker, AnimatedRegion } from "react-native-maps";
@@ -17,14 +17,16 @@ import * as TaskManager from "expo-task-manager";
 import axios from "axios";
 import { Themes } from "../assets/Themes";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useNavigation } from "@react-navigation/native";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import { getUser } from "../hooks/GetUser";
+
 import Profile from "./Profile";
+import Notifs from "../hooks/Notifications";
 
 import { supabase } from "../supabase";
 // import { useQuery } from "react-query";
 // import { useRoute } from "@react-navigation/native";
-// import useUser from "../hooks/GetUser";
-import generateColor from "../hooks/GenerateColor";
 
 const Scaledrone = require("scaledrone-react-native");
 const SCALEDRONE_CHANNEL_ID = "DElnMaQQKKdu1iza";
@@ -32,18 +34,32 @@ const SCALEDRONE_CHANNEL_ID = "DElnMaQQKKdu1iza";
 const screen = Dimensions.get("window");
 
 const ASPECT_RATIO = screen.width / screen.height;
-const LATITUDE_DELTA = 0.008;
+const LATITUDE_DELTA = 0.003;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 const TASK_GET_LOCATION = "background-location-task";
 
-export const Map = () => {
-  const [region, setRegion] = useState(null);
-  const [error, setError] = useState("");
-  const [members, setMembers] = useState([]);
-  const [location, setLocation] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
-  const _getLocationAsync = async () => {
+export default class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      region: null,
+      error: "",
+      members: [],
+      location: null,
+      errorMsg: null,
+      token: "",
+    };
+  }
+
+  _getLocationAsync = async (callback) => {
     console.log("Getting location async");
     const location = await Location.watchPositionAsync(
       {
@@ -58,18 +74,20 @@ export const Map = () => {
     );
   };
 
-  const generateColor = () => {
+  generateColor = () => {
     const randomColor = Math.floor(Math.random() * 16777215)
       .toString(16)
       .padStart(6, "0");
     return `#${randomColor}`;
   };
 
-  const componentDidMount = async (name) => {
+  async componentDidMount(name) {
+    console.log(this.props.route);
     var drone = new Scaledrone(SCALEDRONE_CHANNEL_ID, {
       data: {
-        name: "Placeholder",
-        color: generateColor(),
+        name: this.props.route.params.user.username,
+        token: this.props.route.params.user.token,
+        color: this.generateColor(),
       },
     });
 
@@ -81,16 +99,16 @@ export const Map = () => {
       }
       console.log("Drone on function running");
 
-      Alert.prompt("Please enter a display name. Be creative!", null, (name) =>
+      Alert.prompt("How are you doing today?", null, (name) =>
         doAuthRequest(drone.clientId, name).then((jwt) => {
-          console.log("jwt", jwt);
           drone.authenticate(jwt);
         })
       );
     });
+
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      setErrorMsg("Permission to access location was denied");
+      this.setState({ errorMsg: "Permission to access location was denied" });
       return;
     }
 
@@ -101,7 +119,7 @@ export const Map = () => {
         return console.error(error);
       } else {
         console.log("Connected to my room");
-        _getLocationAsync((position) => {
+        this._getLocationAsync((position) => {
           const { latitude, longitude } = position.coords;
           // publish device's new location
           drone.publish({
@@ -112,10 +130,12 @@ export const Map = () => {
       }
     });
 
-    room.on("members", (members) => setMembers(members));
-    room.on("data", (data, member) => updateLocation(data, member.id));
+    room.on("members", (members) => this.setState({ members }));
+    room.on("data", (data, member) => this.updateLocation(data, member.id));
   }
-  const updateLocation = (data, memberId) => {
+
+  updateLocation(data, memberId) {
+    const { members } = this.state;
     const member = members.find((m) => m.id === memberId);
     if (!member) {
       return;
@@ -134,46 +154,57 @@ export const Map = () => {
         latitudeDelta: LATITUDE_DELTA,
         longitudeDelta: LONGITUDE_DELTA,
       });
-      forceUpdate();
+      this.forceUpdate();
     }
   }
+
+  findToken(name) {
+    const { members } = this.state;
+    console.log("members", members);
+    const membersWithLocations = members.find(
+      (m) => m.clientData.name === name
+    );
+    console.log("name is ", name);
+    console.log("memberswloc", membersWithLocations);
+    console.log("client data", membersWithLocations.clientData);
+    const token = membersWithLocations.clientData.token;
+    console.log("token", token);
+    this.props.navigation.navigate("Notifs", { token: token });
+  }
+
+  render() {
     return (
       <SafeAreaView style={styles.container}>
         <MapView
-          initialRegion={region}
+          initialRegion={this.state.region}
           showsUserLocation={true}
           followsUserLocation={true}
           rotateEnabled={true}
-          minZoomLevel={15}
-          //   onMarkerPress={Send Notification}
+          // isZoomEnabled={false}
+          // onMarkerPress={
+          //   () => this.findToken()
+
+          //   // this.props.navigation.navigate("Notifs", { token: token })
+          // }
           ref={(map) => {
-            map = map;
+            this.map = map;
           }}
           style={styles.map}
-          //   initialRegion={{
-          //     latitude: 37.785834,
-          //     longitude: -122.406417,
-          //     latitudeDelta: LATITUDE_DELTA,
-          //     longitudeDelta: LONGITUDE_DELTA,
-          //   }}
         >
-          {/* createMarkers() */}
+          {this.createMarkers()}
         </MapView>
         <Pressable
           style={styles.icon}
-          //   onPress={this.props.navigation.navigate("Profile")}
+          onPress={() => this.props.navigation.navigate("Profile")}
         >
           <Ionicons name="person-circle" style={styles.person} />
         </Pressable>
-        {/* <View pointerEvents="none" style={styles.members}>
+        <View pointerEvents="none" style={styles.members}>
           {this.createMembers()}
-        </View> */}
+        </View>
       </SafeAreaView>
     );
-}
-
-export default Map;
-
+  }
   createMarkers() {
     const { members } = this.state;
     const membersWithLocations = members.filter((m) => !!m.location);
@@ -187,13 +218,21 @@ export default Map;
           coordinate={location}
           pinColor={color}
           title={name}
-        />
+          // onPress={() => console.log(name)}
+          onPress={() => this.findToken(name)}
+        >
+          <Image
+            source={require("../images/location_heart.png")}
+            style={styles.marker}
+          />
+        </Marker.Animated>
       );
     });
   }
   createMembers() {
     const { members } = this.state;
-    return members.map((member) => {
+    const membersWithLocations = members.filter((m) => !!m.location);
+    return membersWithLocations.map((member) => {
       const { id, location } = member;
       const { name, color } = member.clientData;
       return (
@@ -256,6 +295,38 @@ function doAuthRequest(clientId, name) {
     .catch((error) => console.error(error));
 }
 
+async function registerForPushNotificationsAsync() {
+  let token;
+  if (Device.isDevice) {
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      alert("Failed to get push token for push notification!");
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+  } else {
+    alert("Must use physical device for Push Notifications");
+  }
+
+  if (Platform.OS === "android") {
+    Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+    });
+  }
+
+  return token;
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -286,17 +357,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,1)",
-    borderRadius: 20,
-    height: 30,
+    backgroundColor: Themes.colors.bg,
+    borderRadius: 10,
+    height: 25,
     marginTop: 10,
   },
   memberName: {
     marginHorizontal: 10,
   },
   avatar: {
-    height: 30,
-    width: 30,
+    height: 25,
+    width: 25,
     borderRadius: 15,
   },
   icon: {
@@ -307,5 +378,11 @@ const styles = StyleSheet.create({
   person: {
     fontSize: 35,
     color: Themes.colors.violet,
+  },
+  marker: {
+    flex: 1,
+    width: 35,
+    height: 35,
+    resizeMode: "contain",
   },
 });

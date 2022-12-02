@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   SafeAreaView,
   Pressable,
@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { Themes } from "../assets/Themes";
 import { supabase } from "../supabase";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
@@ -18,8 +20,10 @@ export const Signup = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [expoPushToken, setExpoPushToken] = useState("");
 
-  const signUpUser = async () => {
+  const signUpUser = async (token) => {
+    console.log("SIGNUP USER TOKEN TOKEN", token);
     try {
       const { user, session, error } = await supabase.auth.signUp({
         email: email,
@@ -27,14 +31,28 @@ export const Signup = ({ navigation }) => {
         options: {
           data: {
             username: username,
+            token: token,
           },
         },
       });
       if (error) throw error;
-      console.log("success");
     } catch (e) {
       console.log(e.message);
     }
+  };
+
+  const getToken = () => {
+    registerForPushNotificationsAsync()
+      .then((token) => {
+        signUpUser(token);
+        setExpoPushToken(token);
+      })
+      .catch((err) => {
+        console.log(
+          " NOTIFICATION TOKEN RETRIEVAL FAILED NOTIFICATION TOKEN RETRIEVAL FAILED NOTIFICATION TOKEN RETRIEVAL FAILED"
+        );
+        console.log(err);
+      });
   };
 
   return (
@@ -81,7 +99,9 @@ export const Signup = ({ navigation }) => {
         <Pressable
           style={styles.button}
           onPress={() => {
-            signUpUser;
+            getToken();
+            signUpUser();
+            console.log("signing up");
             navigation.navigate("Map");
           }}
         >
@@ -91,6 +111,42 @@ export const Signup = ({ navigation }) => {
     </SafeAreaView>
   );
 };
+
+async function registerForPushNotificationsAsync() {
+  console.log("In registerforPushNotifications");
+  let token;
+
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+    });
+  }
+
+  if (Device.isDevice) {
+    console.log("Device is device");
+
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      alert("Failed to get push token for push notification!");
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+  } else {
+    alert("Must use physical device for Push Notifications");
+  }
+
+  return token;
+}
 
 export default Signup;
 

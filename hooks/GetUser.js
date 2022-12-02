@@ -19,7 +19,7 @@ import { supabase } from "../supabase";
 //   return data;
 // };
 
-const getUser = async () => {
+export const getUser = async () => {
   const user = supabase.auth.user();
   const { data: users, error } = await supabase
     .from("users")

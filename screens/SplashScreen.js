@@ -12,7 +12,10 @@ import { Themes } from "../assets/Themes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { requireNativeModule } from "expo-modules-core";
 
-export const Splash = ({ navigation }) => {
+export const Splash = ({ navigation, route }) => {
+  const { user } = route.params;
+  console.log("Data passed into splashscreen", user);
+
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
@@ -28,7 +31,7 @@ export const Splash = ({ navigation }) => {
         />
         <Pressable
           style={styles.button}
-          onPress={() => navigation.navigate("Map")}
+          onPress={() => navigation.navigate("Map", { user: user })}
         >
           <Text style={styles.text}>Ring their alarm</Text>
           <Ionicons name="chevron-forward-outline" style={styles.icon} />

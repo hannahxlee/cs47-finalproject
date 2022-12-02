@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   SafeAreaView,
   Image,
@@ -12,19 +12,11 @@ import { Themes } from "../assets/Themes";
 import { supabase } from "../supabase";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
-import * as AppleAuthentication from "expo-apple-authentication";
 
 export const Login = ({ navigation }) => {
-  const [user, setUser] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState(false);
-
-  const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-    });
-  };
 
   const loginUser = async () => {
     console.log("LOGGING IN");
@@ -33,22 +25,24 @@ export const Login = ({ navigation }) => {
         email: email,
         password: password,
       });
-      setUser(data);
+      if (error) {
+        setLoginError(true);
+        return;
+      }
+      if (data) {
+        console.log("data", data);
+        const { data: userData, error } = await supabase
+          .from("users")
+          .select()
+          .eq("id", data.user.user_metadata);
+        navigation.navigate("Splash", {
+          user: data.user.user_metadata,
+        });
+      }
       if (error) throw error;
     } catch (e) {
       console.log(e.message);
     }
-  };
-
-  const doesUserExist = async (user) => {
-    console.log("CHECKING IF USER EXISTS");
-    console.log("Checking user:", user);
-    if (user != null) {
-      console.log("SUCCESS!");
-      navigation.navigate("Splash", { user: user });
-    }
-    console.log("TRY HARDER!");
-    setLoginError((current) => !current);
   };
 
   return (
@@ -88,7 +82,7 @@ export const Login = ({ navigation }) => {
         />
         <Text style={styles.text}>Sign in with</Text>
         <View style={styles.icons}>
-          <Pressable onPress={() => signInWithGoogle()}>
+          <Pressable>
             <Ionicons name="logo-google" style={styles.icon} />
           </Pressable>
           <Pressable>
@@ -103,7 +97,6 @@ export const Login = ({ navigation }) => {
           onPress={() => {
             console.log("STARTING...");
             loginUser();
-            doesUserExist(user);
           }}
         >
           <Text style={styles.buttonText}>LOG IN</Text>

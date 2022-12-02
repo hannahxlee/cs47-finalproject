@@ -24,9 +24,7 @@ export const Profile = ({ navigation }) => {
         fallSpeed={3000}
         colors={[Themes.colors.violet]}
       /> */}
-      <Pressable onPress={() => navigation.navigate("Notifs")}>
-        <Text style={styles.username}>Ring alarm</Text>
-      </Pressable>
+      <Text style={styles.username}>MY PROFILE</Text>
       <Ionicons name="heart-outline" style={styles.heart} />
       <Text style={styles.likeCount}>96</Text>
       <Text style={styles.text}>

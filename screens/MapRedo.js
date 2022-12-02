@@ -1,7 +1,6 @@
 import React, { useState, Component } from "react";
 import {
   Text,
-  TouchableOpacity,
   Dimensions,
   StyleSheet,
   View,
@@ -9,7 +8,6 @@ import {
   SafeAreaView,
   Pressable,
   Modal,
-  Image,
   Button,
 } from "react-native";
 import MapView, { Marker, AnimatedRegion } from "react-native-maps";
@@ -18,12 +16,8 @@ import * as TaskManager from "expo-task-manager";
 import axios from "axios";
 import { Themes } from "../assets/Themes";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
 import { useNavigation } from "@react-navigation/native";
-
 import Profile from "./Profile";
-import Notifs from "../hooks/Notifications";
 
 import { supabase } from "../supabase";
 // import { useQuery } from "react-query";
@@ -37,32 +31,18 @@ const SCALEDRONE_CHANNEL_ID = "DElnMaQQKKdu1iza";
 const screen = Dimensions.get("window");
 
 const ASPECT_RATIO = screen.width / screen.height;
-const LATITUDE_DELTA = 0.004;
+const LATITUDE_DELTA = 0.008;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 const TASK_GET_LOCATION = "background-location-task";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+export const Map = () => {
+  const [region, setRegion] = useState(null);
+  const [error, setError] = useState("");
+  const [members, setMembers] = useState([]);
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
-export default class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      region: null,
-      error: "",
-      members: [],
-      location: null,
-      errorMsg: null,
-      token: "",
-    };
-  }
-
-  _getLocationAsync = async (callback) => {
+  const _getLocationAsync = async () => {
     console.log("Getting location async");
     const location = await Location.watchPositionAsync(
       {
@@ -77,19 +57,18 @@ export default class App extends Component {
     );
   };
 
-  generateColor = () => {
+  const generateColor = () => {
     const randomColor = Math.floor(Math.random() * 16777215)
       .toString(16)
       .padStart(6, "0");
     return `#${randomColor}`;
   };
 
-  async componentDidMount(name) {
-    // const { data } = useUser({ userId: user?.id });
+  const componentDidMount = async (name) => {
     var drone = new Scaledrone(SCALEDRONE_CHANNEL_ID, {
       data: {
-        name: "NAME",
-        color: this.generateColor(),
+        name: "Placeholder",
+        color: generateColor(),
       },
     });
 
@@ -107,18 +86,10 @@ export default class App extends Component {
           drone.authenticate(jwt);
         })
       );
-
-      //   Alert.prompt("Please enter a display name. Be creative!", null, (name) =>
-      //     doAuthRequest(drone.clientId, name).then((jwt) => {
-      //       console.log("jwt", jwt);
-      //       drone.authenticate(jwt);
-      //     })
-      //   );
     });
-
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      this.setState({ errorMsg: "Permission to access location was denied" });
+      setErrorMsg("Permission to access location was denied");
       return;
     }
 
@@ -129,7 +100,7 @@ export default class App extends Component {
         return console.error(error);
       } else {
         console.log("Connected to my room");
-        this._getLocationAsync((position) => {
+        _getLocationAsync((position) => {
           const { latitude, longitude } = position.coords;
           // publish device's new location
           drone.publish({
@@ -140,31 +111,10 @@ export default class App extends Component {
       }
     });
 
-    room.on("members", (members) => this.setState({ members }));
-    room.on("data", (data, member) => this.updateLocation(data, member.id));
+    room.on("members", (members) => setMembers(members));
+    room.on("data", (data, member) => updateLocation(data, member.id));
   }
-
-  // // Sets up the push notification permissions
-  // componentDidMount() {
-  //   registerForPushNotificationsAsync().then((token) =>
-  //     setExpoPushToken(token)
-  //   );
-
-  //   // This listener is fired whenever a notification is received while the app is foregrounded
-  //   notificationListener.current =
-  //     Notifications.addNotificationReceivedListener((notification) => {
-  //       setNotification(notification);
-  //     });
-
-  //   // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
-  //   responseListener.current =
-  //     Notifications.addNotificationResponseReceivedListener((response) => {
-  //       console.log(response);
-  //     });
-  // }
-
-  updateLocation(data, memberId) {
-    const { members } = this.state;
+  const updateLocation = (data, memberId) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) {
       return;
@@ -183,26 +133,20 @@ export default class App extends Component {
         latitudeDelta: LATITUDE_DELTA,
         longitudeDelta: LONGITUDE_DELTA,
       });
-      this.forceUpdate();
+      forceUpdate();
     }
   }
-
-  render() {
-    console.log("notifs function", this.props.Notifs);
-    console.log("token", this.state.token);
-
     return (
       <SafeAreaView style={styles.container}>
         <MapView
-          initialRegion={this.state.region}
+          initialRegion={region}
           showsUserLocation={true}
           followsUserLocation={true}
           rotateEnabled={true}
-          //   minZoomLevel={20}
-          onMarkerPress={this.props.Notifs}
-          // onMarkerPress={() => this.props.navigation.navigate("Profile")}
+          minZoomLevel={15}
+          //   onMarkerPress={Send Notification}
           ref={(map) => {
-            this.map = map;
+            map = map;
           }}
           style={styles.map}
           //   initialRegion={{
@@ -212,20 +156,23 @@ export default class App extends Component {
           //     longitudeDelta: LONGITUDE_DELTA,
           //   }}
         >
-          {this.createMarkers()}
+          {/* createMarkers() */}
         </MapView>
         <Pressable
           style={styles.icon}
-          onPress={() => this.props.navigation.navigate("Profile")}
+          //   onPress={this.props.navigation.navigate("Profile")}
         >
           <Ionicons name="person-circle" style={styles.person} />
         </Pressable>
-        <View pointerEvents="none" style={styles.members}>
+        {/* <View pointerEvents="none" style={styles.members}>
           {this.createMembers()}
-        </View>
+        </View> */}
       </SafeAreaView>
     );
-  }
+}
+
+export default Map;
+
   createMarkers() {
     const { members } = this.state;
     const membersWithLocations = members.filter((m) => !!m.location);
@@ -239,19 +186,13 @@ export default class App extends Component {
           coordinate={location}
           pinColor={color}
           title={name}
-        >
-          <Image
-            source={require("../images/location_heart.png")}
-            style={styles.marker}
-          />
-        </Marker.Animated>
+        />
       );
     });
   }
   createMembers() {
     const { members } = this.state;
-    const membersWithLocations = members.filter((m) => !!m.location);
-    return membersWithLocations.map((member) => {
+    return members.map((member) => {
       const { id, location } = member;
       const { name, color } = member.clientData;
       return (
@@ -314,59 +255,6 @@ function doAuthRequest(clientId, name) {
     .catch((error) => console.error(error));
 }
 
-// Can use this function below, OR use Expo's Push Notification Tool-> https://expo.dev/notifications
-async function sendPushNotification(expoPushToken) {
-  const message = {
-    to: expoPushToken,
-    sound: "default",
-    title: "Original Title",
-    body: "And here is the body!",
-    data: { someData: "goes here" },
-  };
-
-  await fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Accept-encoding": "gzip, deflate",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(message),
-  });
-}
-
-async function registerForPushNotificationsAsync() {
-  let token;
-  if (Device.isDevice) {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== "granted") {
-      alert("Failed to get push token for push notification!");
-      return;
-    }
-    token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log(token);
-  } else {
-    alert("Must use physical device for Push Notifications");
-  }
-
-  if (Platform.OS === "android") {
-    Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C",
-    });
-  }
-
-  return token;
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -397,17 +285,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Themes.colors.bg,
-    borderRadius: 10,
-    height: 25,
+    backgroundColor: "rgba(255,255,255,1)",
+    borderRadius: 20,
+    height: 30,
     marginTop: 10,
   },
   memberName: {
     marginHorizontal: 10,
   },
   avatar: {
-    height: 25,
-    width: 25,
+    height: 30,
+    width: 30,
     borderRadius: 15,
   },
   icon: {
@@ -418,11 +306,5 @@ const styles = StyleSheet.create({
   person: {
     fontSize: 35,
     color: Themes.colors.violet,
-  },
-  marker: {
-    flex: 1,
-    width: 35,
-    height: 35,
-    resizeMode: "contain",
   },
 });

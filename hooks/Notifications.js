@@ -20,12 +20,12 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
   }),
 });
 
-export default function Notifs({ navigation }) {
+export default function Notifs({ route, navigation }) {
   const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState(false);
   const [title, setTitle] = useState("");
@@ -37,7 +37,6 @@ export default function Notifs({ navigation }) {
   useEffect(() => {
     registerForPushNotificationsAsync()
       .then((token) => {
-        console.log("got token");
         setExpoPushToken(token);
       })
       .catch((err) => console.log(err));
@@ -61,23 +60,25 @@ export default function Notifs({ navigation }) {
   }, []);
 
   async function schedulePushNotification() {
-    console.log(title);
+    const token = route.params.token;
+
+    console.log("passed in token successfully", token);
     // await Notifications.scheduleNotificationAsync({
-    //   to: "ExponentPushToken[flJJEVNlwtdd8_2DsFuoVt]",
+    //   // to: ExponentPushToken[flJJEVNlwtdd8_2DsFuoVt],
+    //   to: "ExponentPushToken[zJLfCzNTY2OtxZONUxQhOJ]",
     //   content: {
     //     title: title,
     //     body: body,
-    //     // data: { data: "goes here" },
     //   },
     //   trigger: { seconds: 2 },
     // });
 
     const message = {
-      to: "ExponentPushToken[flJJEVNlwtdd8_2DsFuoVt]",
+      to: token,
       sound: "default",
-      title: "Original Title",
-      body: "And here is the body!",
-      data: { someData: "goes here" },
+      title: title,
+      body: body,
+      trigger: { seconds: 3 },
     };
 
     await fetch("https://exp.host/--/api/v2/push/send", {
@@ -91,21 +92,23 @@ export default function Notifs({ navigation }) {
     });
   }
 
-  console.log("expoToken", expoPushToken);
+  // console.log("expoToken", expoPushToken);
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text>Your expo push token: {expoPushToken}</Text>
       <View style={styles.top}>
         <Pressable
           style={styles.top}
-          onPress={() => navigation.navigate("Profile")}
+          onPress={() => navigation.navigate("Map")}
         >
           <Ionicons name="chevron-back-outline" style={styles.back} />
         </Pressable>
       </View>
       <View style={styles.form}>
-        <Text style={styles.title}>Ring alarm</Text>
+        <Text style={styles.title}>
+          Ring alarm
+          {route.params.token}
+        </Text>
 
         <Text style={styles.inputText}>Enter your name</Text>
         <TextInput
@@ -170,7 +173,7 @@ async function registerForPushNotificationsAsync() {
       return;
     }
     token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log(token);
+    // console.log(token);
   } else {
     alert("Must use physical device for Push Notifications");
   }

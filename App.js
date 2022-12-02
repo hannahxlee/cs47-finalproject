@@ -19,7 +19,7 @@ import * as SplashScreen from "expo-splash-screen";
 import HomeScreen from "./screens/HomeScreen";
 import Login from "./screens/Login";
 import Signup from "./screens/Signup";
-import Map from "./screens/UserLocation";
+import Map from "./screens/Map";
 import Profile from "./screens/Profile";
 import Notifs from "./hooks/Notifications";
 import Splash from "./screens/SplashScreen";
