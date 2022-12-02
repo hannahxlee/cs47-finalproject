@@ -15,8 +15,6 @@ import {
 import { Themes } from "../assets/Themes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-// const MY_TASK_NAME = "background-notification-task";
-
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -26,7 +24,6 @@ Notifications.setNotificationHandler({
 });
 
 export default function Notifs({ route, navigation }) {
-  const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -61,8 +58,11 @@ export default function Notifs({ route, navigation }) {
 
   async function schedulePushNotification() {
     const token = route.params.token;
+    const username = route.params.username;
+    console.log("passed in username to notifs", route.params.username);
+    console.log("passed in token to notifs", token);
+    // console.log("Passed in username:", username);
 
-    console.log("passed in token successfully", token);
     // await Notifications.scheduleNotificationAsync({
     //   // to: ExponentPushToken[flJJEVNlwtdd8_2DsFuoVt],
     //   to: "ExponentPushToken[zJLfCzNTY2OtxZONUxQhOJ]",
@@ -92,8 +92,6 @@ export default function Notifs({ route, navigation }) {
     });
   }
 
-  // console.log("expoToken", expoPushToken);
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.top}>
@@ -106,8 +104,7 @@ export default function Notifs({ route, navigation }) {
       </View>
       <View style={styles.form}>
         <Text style={styles.title}>
-          Ring alarm
-          {route.params.token}
+          Ring {route.params.username}'s love alarm
         </Text>
 
         <Text style={styles.inputText}>Enter your name</Text>
@@ -137,7 +134,7 @@ export default function Notifs({ route, navigation }) {
         </Text> */}
 
         <Button
-          title="Ring [name]'s alarm"
+          title="SEND"
           style={styles.sendNotif}
           onPress={async () => {
             await schedulePushNotification();

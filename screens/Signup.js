@@ -22,8 +22,8 @@ export const Signup = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [expoPushToken, setExpoPushToken] = useState("");
 
-  const signUpUser = async (token) => {
-    console.log("SIGNUP USER TOKEN TOKEN", token);
+  const signUpUser = async () => {
+    console.log("From signUpUser", expoPushToken);
     try {
       const { user, session, error } = await supabase.auth.signUp({
         email: email,
@@ -31,7 +31,7 @@ export const Signup = ({ navigation }) => {
         options: {
           data: {
             username: username,
-            token: token,
+            token: expoPushToken,
           },
         },
       });
@@ -44,8 +44,11 @@ export const Signup = ({ navigation }) => {
   const getToken = () => {
     registerForPushNotificationsAsync()
       .then((token) => {
-        signUpUser(token);
         setExpoPushToken(token);
+        console.log("From getToken:", token);
+        console.log("From getToken (expoPushToken):", token);
+        signUpUser();
+        // setExpoPushToken(token);
       })
       .catch((err) => {
         console.log(
@@ -101,8 +104,7 @@ export const Signup = ({ navigation }) => {
           onPress={() => {
             getToken();
             signUpUser();
-            console.log("signing up");
-            navigation.navigate("Map");
+            navigation.navigate("Splash");
           }}
         >
           <Text style={styles.buttonText}>CREATE ACCOUNT</Text>
@@ -131,6 +133,7 @@ async function registerForPushNotificationsAsync() {
     const { status: existingStatus } =
       await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
+    console.log("DID I GET PERMISSION?", finalStatus);
     if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
@@ -140,7 +143,7 @@ async function registerForPushNotificationsAsync() {
       return;
     }
     token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log(token);
+    console.log("From registerForPushNotificationsAsync", token);
   } else {
     alert("Must use physical device for Push Notifications");
   }

@@ -25,6 +25,8 @@ import Profile from "./Profile";
 import Notifs from "../hooks/Notifications";
 
 import { supabase } from "../supabase";
+import useMergeRefs from "react-native/Libraries/Utilities/useMergeRefs";
+import { useRef } from "react/cjs/react.development";
 // import { useQuery } from "react-query";
 // import { useRoute } from "@react-navigation/native";
 
@@ -167,9 +169,14 @@ export default class App extends Component {
     console.log("name is ", name);
     console.log("memberswloc", membersWithLocations);
     console.log("client data", membersWithLocations.clientData);
+    const username = membersWithLocations.clientData.name;
     const token = membersWithLocations.clientData.token;
     console.log("token", token);
-    this.props.navigation.navigate("Notifs", { token: token });
+    console.log("username from findToken map", username);
+    this.props.navigation.navigate("Notifs", {
+      token: token,
+      username: username,
+    });
   }
 
   render() {
