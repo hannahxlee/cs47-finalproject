@@ -33,7 +33,7 @@ app.post("/auth", (req, res) => {
         name,
         color: colors.get(),
       },
-      // exp: Math.floor(Date.now() / 1000) + 60 * 3 // expire in 3 minutes
+      exp: Math.floor(Date.now() / 1000) + 60 * 3, // expire in 3 minutes
     },
     "OyvGUQU3p1z8aCddFhk6ruNk2s72ZxBT"
   );

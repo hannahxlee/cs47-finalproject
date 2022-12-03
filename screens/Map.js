@@ -22,7 +22,7 @@ import * as Device from "expo-device";
 import { getUser } from "../hooks/GetUser";
 
 import Profile from "./Profile";
-import Notifs from "../hooks/Notifications";
+import Notifs from "./Notifications";
 
 import { supabase } from "../supabase";
 import useMergeRefs from "react-native/Libraries/Utilities/useMergeRefs";
@@ -62,7 +62,7 @@ export default class App extends Component {
   }
 
   _getLocationAsync = async (callback) => {
-    console.log("Getting location async");
+    // console.log("Getting location async");
     const location = await Location.watchPositionAsync(
       {
         enableHighAccuracy: true,
@@ -74,6 +74,21 @@ export default class App extends Component {
       },
       (error) => console.log(error)
     );
+
+    // TaskManager.defineTask(
+    //   TASK_GET_LOCATION,
+    //   ({ data: { locations }, error }) => {
+    //     if (error) {
+    //       console.error(error);
+    //       return;
+    //     }
+    //     const location = locations[0];
+    //     if (location) {
+    //       console.log('location')
+    //       callback(location);
+    //     }
+    //   }
+    // );
   };
 
   generateColor = () => {
@@ -84,7 +99,7 @@ export default class App extends Component {
   };
 
   async componentDidMount(name) {
-    console.log(this.props.route);
+    // console.log(this.props.route);
     var drone = new Scaledrone(SCALEDRONE_CHANNEL_ID, {
       data: {
         name: this.props.route.params.user.username,
@@ -99,7 +114,7 @@ export default class App extends Component {
       if (error) {
         return console.error(error);
       }
-      console.log("Drone on function running");
+      // console.log("Drone on function running");
 
       Alert.prompt("How are you doing today?", null, (name) =>
         doAuthRequest(drone.clientId, name).then((jwt) => {
@@ -108,19 +123,78 @@ export default class App extends Component {
       );
     });
 
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
+    // React.useEffect(() => {
+    //   const config = async () => {
+    //     let resf = await Location.requestForegroundPermissionsAsync();
+    //     let resb = await Location.requestBackgroundPermissionsAsync();
+    //     if (resf.status != "granted" && resb.status !== "granted") {
+    //       console.log("Permission to access location was denied");
+    //     } else {
+    //       console.log("Permission to access location granted");
+    //       this.setState({
+    //         errorMsg: "Permission to access location was denied",
+    //       });
+    //       return;
+    //     }
+    //   };
+
+    //   config();
+    // }, []);
+
+    const { status: foregroundStatus } =
+      await Location.requestForegroundPermissionsAsync();
+    if (foregroundStatus != "granted") {
+      console.log("Permission to access location was denied");
       this.setState({ errorMsg: "Permission to access location was denied" });
       return;
     }
 
+    // const backgroundPermission =
+    //   await Location.requestBackgroundPermissionsAsync();
+    // if (!backgroundPermission.granted) {
+    //   this.setState({
+    //     errorMsg: "Permission to access background location was denied",
+    //   });
+    //   return;
+    // }
+
+    // const { foregroundStatus } =
+    //   await Location.requestForegroundPermissionsAsync();
+    // if (foregroundStatus != "granted") {
+    //   this.setState({ errorMsg: "Permission to access location was denied" });
+    //   return;
+    // } else {
+    //   console.log("Was foregroundStatus granted?", foregroundStatus);
+    //   const { backgroundStatus } =
+    //     await Location.requestForegroundPermissionsAsync();
+    //   console.log("Was backgroundStatus granted?", backgroundStatus);
+    //   if (backgroundStatus != granted) {
+    //     this.setState({ errorMsg: "Permission to access location was denied" });
+    //     return;
+    //   }
+    // }
+
+    // const { foregroundStatus } =
+    //   await Location.requestForegroundPermissionsAsync();
+    // const { backgroundStatus } =
+    //   await Location.requestForegroundPermissionsAsync();
+
+    // console.log("Was foregroundStatus granted?", foregroundStatus);
+    // console.log("Was backgroundStatus granted?", backgroundStatus);
+
+    // if (foregroundStatus != "granted" && backgroundStatus != granted) {
+    //   console.log("Permission to access location was denied");
+    //   this.setState({ errorMsg: "Permission to access location was denied" });
+    //   return;
+    // }
+
     const room = drone.subscribe("observable-love-alarm");
     room.on("open", (error) => {
-      console.log("opening room");
+      // console.log("opening room");
       if (error) {
         return console.error(error);
       } else {
-        console.log("Connected to my room");
+        // console.log("Connected to my room");
         this._getLocationAsync((position) => {
           const { latitude, longitude } = position.coords;
           // publish device's new location
@@ -132,7 +206,23 @@ export default class App extends Component {
       }
     });
 
-    room.on("members", (members) => this.setState({ members }));
+    room.on("members", (members) => {
+      console.log("THESE ARE THE MEMBERS: ", members);
+      this.setState({ members });
+    });
+
+    // room.on("members", (members) => {
+    //   console.log("THESE ARE THE MEMBERS: ", members);
+    //   this.setState({ members : members });
+    // });
+    room.on("member_join", (member) =>
+      this.setState({ members: [...this.state.members, member] })
+    );
+    room.on("member_leave", (member) => {
+      this.setState({
+        members: this.state.members.filter((mem) => mem.id !== member.id),
+      });
+    });
     room.on("data", (data, member) => this.updateLocation(data, member.id));
   }
 
@@ -162,17 +252,12 @@ export default class App extends Component {
 
   findToken(name) {
     const { members } = this.state;
-    console.log("members", members);
     const membersWithLocations = members.find(
       (m) => m.clientData.name === name
     );
-    console.log("name is ", name);
-    console.log("memberswloc", membersWithLocations);
-    console.log("client data", membersWithLocations.clientData);
+    // console.log("name is ", name);
     const username = membersWithLocations.clientData.name;
     const token = membersWithLocations.clientData.token;
-    console.log("token", token);
-    console.log("username from findToken map", username);
     this.props.navigation.navigate("Notifs", {
       token: token,
       username: username,
@@ -188,11 +273,6 @@ export default class App extends Component {
           followsUserLocation={true}
           rotateEnabled={true}
           // isZoomEnabled={false}
-          // onMarkerPress={
-          //   () => this.findToken()
-
-          //   // this.props.navigation.navigate("Notifs", { token: token })
-          // }
           ref={(map) => {
             this.map = map;
           }}
@@ -207,7 +287,7 @@ export default class App extends Component {
           <Ionicons name="person-circle" style={styles.person} />
         </Pressable>
         <View pointerEvents="none" style={styles.members}>
-          {this.createMembers()}
+          {/* {this.createMembers()} */}
         </View>
       </SafeAreaView>
     );
@@ -225,7 +305,6 @@ export default class App extends Component {
           coordinate={location}
           pinColor={color}
           title={name}
-          // onPress={() => console.log(name)}
           onPress={() => this.findToken(name)}
         >
           <Image
@@ -238,9 +317,11 @@ export default class App extends Component {
   }
   createMembers() {
     const { members } = this.state;
+    console.log("CREATE MEMBERS", members);
+
     const membersWithLocations = members.filter((m) => !!m.location);
     return membersWithLocations.map((member) => {
-      const { id, location } = member;
+      const { id } = member;
       const { name, color } = member.clientData;
       return (
         <View key={id} style={styles.member}>
@@ -317,7 +398,7 @@ async function registerForPushNotificationsAsync() {
       return;
     }
     token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log(token);
+    // console.log(token);
   } else {
     alert("Must use physical device for Push Notifications");
   }
@@ -364,7 +445,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Themes.colors.bg,
+    backgroundColor: Themes.colors.white,
     borderRadius: 10,
     height: 25,
     marginTop: 10,

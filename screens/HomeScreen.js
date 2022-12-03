@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
 
   buttonText: {
     size: 14,
-    color: Themes.colors.bg,
+    color: Themes.colors.white,
     fontFamily: "Europa-Bold",
   },
 });

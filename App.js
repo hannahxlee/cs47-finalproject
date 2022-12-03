@@ -1,28 +1,18 @@
-import React, { Component, useState, useEffect } from "react";
-import { StatusBar } from "expo-status-bar";
-import {
-  StyleSheet,
-  Text,
-  View,
-  Dimensions,
-  TouchableOpacity,
-  AlertIOS,
-} from "react-native";
-import MapView, { Marker, AnimatedRegion, LocalTile } from "react-native-maps";
+import React from "react";
+import { StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import AppLoading from "expo-app-loading";
 import { useFonts } from "expo-font";
-import { Themes } from "./assets/Themes";
-import * as SplashScreen from "expo-splash-screen";
+import { navigationRef } from "./screens/RootNav";
 
 import HomeScreen from "./screens/HomeScreen";
 import Login from "./screens/Login";
 import Signup from "./screens/Signup";
 import Map from "./screens/Map";
 import Profile from "./screens/Profile";
-import Notifs from "./hooks/Notifications";
+import Notifs from "./screens/Notifications";
 import Splash from "./screens/SplashScreen";
+import Message from "./screens/Message";
 
 export default function App() {
   let [fontsLoaded] = useFonts({
@@ -37,7 +27,7 @@ export default function App() {
   const Stack = createStackNavigator();
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator>
         <Stack.Screen
           name="HomeScreen"
@@ -72,6 +62,11 @@ export default function App() {
         <Stack.Screen
           name="Notifs"
           component={Notifs}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Message"
+          component={Message}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

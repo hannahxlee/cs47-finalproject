@@ -1,4 +1,5 @@
 export const colors = {
-    bg: '#FFFFFF',
-    violet: '#1F0D60',
-  };
+  white: "#FFFFFF",
+  violet: "#1F0D60",
+  lavender: "#C7C2E2",
+};

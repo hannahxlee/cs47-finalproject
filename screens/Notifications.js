@@ -29,14 +29,14 @@ export default function Notifs({ route, navigation }) {
   const [body, setBody] = useState("");
   const notificationListener = useRef();
   const responseListener = useRef();
-  //   const lastNotificationResponse = Notifications.useLastNotificationResponse();
+  const lastNotificationResponse = Notifications.useLastNotificationResponse();
 
   useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then((token) => {
-        setExpoPushToken(token);
-      })
-      .catch((err) => console.log(err));
+    // registerForPushNotificationsAsync()
+    //   .then((token) => {
+    //     setExpoPushToken(token);
+    //   })
+    //   .catch((err) => console.log(err));
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
@@ -45,7 +45,9 @@ export default function Notifs({ route, navigation }) {
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
+        console.log("Response upon click:", response);
+        navigation.navigate("Message", { name: title, body: body });
+        navigation.navigate("Message");
       });
 
     return () => {
@@ -59,9 +61,6 @@ export default function Notifs({ route, navigation }) {
   async function schedulePushNotification() {
     const token = route.params.token;
     const username = route.params.username;
-    console.log("passed in username to notifs", route.params.username);
-    console.log("passed in token to notifs", token);
-    // console.log("Passed in username:", username);
 
     // await Notifications.scheduleNotificationAsync({
     //   // to: ExponentPushToken[flJJEVNlwtdd8_2DsFuoVt],
@@ -181,7 +180,7 @@ async function registerForPushNotificationsAsync() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Themes.colors.bg,
+    backgroundColor: Themes.colors.white,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -211,7 +210,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: "10%",
     borderWidth: 1,
-    backgroundColor: Themes.colors.bg,
+    backgroundColor: Themes.colors.white,
     borderColor: Themes.colors.violet,
     color: Themes.colors.violet,
     fontFamily: "Europa-Regular",

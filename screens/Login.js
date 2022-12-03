@@ -16,7 +16,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 export const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   const loginUser = async () => {
     console.log("LOGGING IN");
@@ -26,7 +26,7 @@ export const Login = ({ navigation }) => {
         password: password,
       });
       if (error) {
-        setLoginError(true);
+        setLoginError("ERROR");
         return;
       }
       if (data) {
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   back: {
     fontSize: 30,
-    color: Themes.colors.bg,
+    color: Themes.colors.white,
     marginLeft: "1%",
   },
   heart: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     height: "70%",
     position: "absolute",
     bottom: 0,
-    backgroundColor: Themes.colors.bg,
+    backgroundColor: Themes.colors.white,
     borderTopLeftRadius: "30%",
     borderTopRightRadius: "30%",
     paddingTop: "12%",
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: "10%",
     borderWidth: 1,
-    backgroundColor: Themes.colors.bg,
+    backgroundColor: Themes.colors.white,
     borderColor: Themes.colors.violet,
     color: Themes.colors.violet,
     fontFamily: "Europa-Regular",
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
-    color: Themes.colors.bg,
+    color: Themes.colors.white,
     fontFamily: "Europa-Bold",
   },
   text: {

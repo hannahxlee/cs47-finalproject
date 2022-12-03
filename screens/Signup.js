@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   SafeAreaView,
   Pressable,
@@ -7,7 +7,6 @@ import {
   Text,
   View,
   TextInput,
-  Button,
 } from "react-native";
 import { Themes } from "../assets/Themes";
 import { supabase } from "../supabase";
@@ -21,20 +20,29 @@ export const Signup = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [expoPushToken, setExpoPushToken] = useState("");
+  const [signUpError, setSignUpError] = useState(false);
 
-  const signUpUser = async () => {
-    console.log("From signUpUser", expoPushToken);
+  const signUpUser = async (token) => {
+    console.log("From signUpUser", token);
     try {
-      const { user, session, error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
         options: {
           data: {
             username: username,
-            token: expoPushToken,
+            token: token,
           },
         },
       });
+      if (error) {
+        setSignUpError(true);
+        console.log("WE GOT AN ERROR", signUpError);
+        return;
+      }
+      if (!error) {
+        navigation.navigate("Login");
+      }
       if (error) throw error;
     } catch (e) {
       console.log(e.message);
@@ -46,14 +54,10 @@ export const Signup = ({ navigation }) => {
       .then((token) => {
         setExpoPushToken(token);
         console.log("From getToken:", token);
-        console.log("From getToken (expoPushToken):", token);
-        signUpUser();
-        // setExpoPushToken(token);
+        console.log("From getToken (expoPushToken):", expoPushToken);
+        signUpUser(token);
       })
       .catch((err) => {
-        console.log(
-          " NOTIFICATION TOKEN RETRIEVAL FAILED NOTIFICATION TOKEN RETRIEVAL FAILED NOTIFICATION TOKEN RETRIEVAL FAILED"
-        );
         console.log(err);
       });
   };
@@ -103,19 +107,23 @@ export const Signup = ({ navigation }) => {
           style={styles.button}
           onPress={() => {
             getToken();
-            signUpUser();
-            navigation.navigate("Splash");
+            // signUpUser();
           }}
         >
           <Text style={styles.buttonText}>CREATE ACCOUNT</Text>
         </Pressable>
+        {signUpError && (
+          <Text style={styles.errorMessage}>
+            This account has already been registered
+          </Text>
+        )}
       </View>
     </SafeAreaView>
   );
 };
 
 async function registerForPushNotificationsAsync() {
-  console.log("In registerforPushNotifications");
+  // console.log("In registerforPushNotifications");
   let token;
 
   if (Platform.OS === "android") {
@@ -128,12 +136,12 @@ async function registerForPushNotificationsAsync() {
   }
 
   if (Device.isDevice) {
-    console.log("Device is device");
+    // console.log("Device is device");
 
     const { status: existingStatus } =
       await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    console.log("DID I GET PERMISSION?", finalStatus);
+    // console.log("DID I GET PERMISSION?", finalStatus);
     if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
@@ -156,7 +164,7 @@ export default Signup;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Themes.colors.bg,
+    backgroundColor: Themes.colors.white,
     alignItems: "flex-start",
     justifyContent: "center",
   },
@@ -198,7 +206,7 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     marginBottom: 20,
     borderBottomWidth: 1,
-    backgroundColor: Themes.colors.bg,
+    backgroundColor: Themes.colors.white,
     borderColor: Themes.colors.violet,
     color: Themes.colors.violet,
     fontFamily: "Europa-Regular",
@@ -216,7 +224,14 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
-    color: Themes.colors.bg,
+    color: Themes.colors.white,
     fontFamily: "Europa-Bold",
+  },
+  errorMessage: {
+    marginTop: 10,
+    alignSelf: "center",
+    size: 10,
+    color: "red",
+    fontFamily: "Europa-LightItalic",
   },
 });

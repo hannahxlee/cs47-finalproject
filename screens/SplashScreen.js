@@ -14,7 +14,7 @@ import { requireNativeModule } from "expo-modules-core";
 
 export const Splash = ({ navigation, route }) => {
   const { user } = route.params;
-  console.log("Data passed into splashscreen", user);
+  // console.log("Data passed into splashscreen", user);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,14 +63,14 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 25,
     fontFamily: "Europa-Bold",
-    color: Themes.colors.bg,
+    color: Themes.colors.white,
     textAlign: "center",
     margin: 20,
     lineHeight: 30,
   },
   icon: {
     fontSize: 27,
-    color: Themes.colors.bg,
+    color: Themes.colors.white,
   },
   button: {
     flexDirection: "row",
