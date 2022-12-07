@@ -383,6 +383,7 @@ function doAuthRequest(clientId, name) {
     .catch((error) => console.error(error));
 }
 
+/*
 async function registerForPushNotificationsAsync() {
   let token;
   if (Device.isDevice) {
@@ -414,6 +415,7 @@ async function registerForPushNotificationsAsync() {
 
   return token;
 }
+*/
 
 const styles = StyleSheet.create({
   container: {

@@ -4,11 +4,6 @@ import { Themes } from "../assets/Themes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 export const Message = ({ route, navigation }) => {
-  //   const name = route.params.name;
-  //   const body = route.params.body;
-  //   console.log("Name from message", name);
-  //   console.log("Body from message", body);
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.top}>
@@ -22,11 +17,8 @@ export const Message = ({ route, navigation }) => {
       <View style={styles.cardContainer}>
         <View style={styles.cardBackground}>
           <View style={styles.cardMain}>
-            <Text style={styles.title}>Message from Hannah</Text>
-            <Text style={styles.message}>
-              Hey there my name is Hannah and I'm here to let you know that my
-              name is Hannah because I'm Hannah and this is my name.
-            </Text>
+            <Text style={styles.title}>Message from {route.params.name}</Text>
+            <Text style={styles.message}>{route.params.body}</Text>
             <Ionicons name="heart" style={styles.heart} />
           </View>
           <View style={styles.triangleLeft}></View>
@@ -73,13 +65,15 @@ const styles = StyleSheet.create({
     fontSize: 100,
     color: Themes.colors.violet,
     alignSelf: "center",
+    position: "absolute",
+    bottom: "10%",
   },
   title: {
     fontFamily: "Europa-Bold",
     fontSize: 24,
     alignSelf: "center",
     color: Themes.colors.violet,
-    marginTop: 30,
+    marginTop: "10%",
   },
   cardContainer: {
     flex: 1,
@@ -159,7 +153,7 @@ const styles = StyleSheet.create({
     fontFamily: "Europa-Regular",
     fontSize: 18,
     textAlign: "justify",
-    margin: 22,
+    margin: "10%",
   },
   buttonContainer: {
     flex: 1,
@@ -177,7 +171,6 @@ const styles = StyleSheet.create({
     borderRadius: "15%",
     justifyContent: "center",
     alignItems: "center",
-    padding: 12,
   },
 
   buttonText: {

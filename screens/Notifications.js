@@ -11,6 +11,7 @@ import {
   StyleSheet,
   TextInput,
   Pressable,
+  Image,
 } from "react-native";
 import { Themes } from "../assets/Themes";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -32,11 +33,11 @@ export default function Notifs({ route, navigation }) {
   const lastNotificationResponse = Notifications.useLastNotificationResponse();
 
   useEffect(() => {
-    // registerForPushNotificationsAsync()
-    //   .then((token) => {
-    //     setExpoPushToken(token);
-    //   })
-    //   .catch((err) => console.log(err));
+    registerForPushNotificationsAsync()
+      // .then((token) => {
+      //   setExpoPushToken(token);
+      // })
+      .catch((err) => console.log(err));
 
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
@@ -45,9 +46,11 @@ export default function Notifs({ route, navigation }) {
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("Response upon click:", response);
-        navigation.navigate("Message", { name: title, body: body });
-        navigation.navigate("Message");
+        console.log("Response upon click:", response.notification);
+        navigation.navigate("Message", {
+          name: title,
+          body: body,
+        });
       });
 
     return () => {
@@ -59,24 +62,18 @@ export default function Notifs({ route, navigation }) {
   }, []);
 
   async function schedulePushNotification() {
+    console.log("SENDING NOTIFICATION");
     const token = route.params.token;
+    console.log(token);
     const username = route.params.username;
-
-    // await Notifications.scheduleNotificationAsync({
-    //   // to: ExponentPushToken[flJJEVNlwtdd8_2DsFuoVt],
-    //   to: "ExponentPushToken[zJLfCzNTY2OtxZONUxQhOJ]",
-    //   content: {
-    //     title: title,
-    //     body: body,
-    //   },
-    //   trigger: { seconds: 2 },
-    // });
 
     const message = {
       to: token,
       sound: "default",
-      title: title,
-      body: body,
+      // title: title,
+      // body: body,
+      title: "Someone rang your alarm! 👀",
+      body: "Open the notification to see who it is!",
       trigger: { seconds: 3 },
     };
 
@@ -101,11 +98,14 @@ export default function Notifs({ route, navigation }) {
           <Ionicons name="chevron-back-outline" style={styles.back} />
         </Pressable>
       </View>
+      <Image
+        source={require("../images/love_alarm_violet.png")}
+        style={styles.heart}
+      />
+      <Text style={styles.title}>
+        Ring {route.params.username}'s love alarm
+      </Text>
       <View style={styles.form}>
-        <Text style={styles.title}>
-          Ring {route.params.username}'s love alarm
-        </Text>
-
         <Text style={styles.inputText}>Enter your name</Text>
         <TextInput
           style={styles.textInput}
@@ -133,7 +133,7 @@ export default function Notifs({ route, navigation }) {
         </Text> */}
 
         <Button
-          title="SEND"
+          title="SEND NOTIFICATION"
           style={styles.sendNotif}
           onPress={async () => {
             await schedulePushNotification();
@@ -198,11 +198,17 @@ const styles = StyleSheet.create({
     color: Themes.colors.violet,
     marginLeft: "1%",
   },
+  heart: {
+    width: 150,
+    height: 150,
+  },
   title: {
     fontFamily: "Europa-Bold",
-    fontSize: 30,
+    fontSize: 25,
     alignSelf: "center",
-    marginBottom: 40,
+    marginTop: 30,
+    marginBottom: 50,
+    color: Themes.colors.violet,
   },
   textInput: {
     height: 35,
