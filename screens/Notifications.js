@@ -63,9 +63,10 @@ export default function Notifs({ route, navigation }) {
 
   async function schedulePushNotification() {
     console.log("SENDING NOTIFICATION");
+    console.log(title);
+    console.log(body);
     const token = route.params.token;
     console.log(token);
-    const username = route.params.username;
 
     const message = {
       to: token,
@@ -74,7 +75,6 @@ export default function Notifs({ route, navigation }) {
       // body: body,
       title: "Someone rang your alarm! 👀",
       body: "Open the notification to see who it is!",
-      trigger: { seconds: 3 },
     };
 
     await fetch("https://exp.host/--/api/v2/push/send", {
@@ -86,6 +86,7 @@ export default function Notifs({ route, navigation }) {
       },
       body: JSON.stringify(message),
     });
+    console.log("SENT NOTIFICATION");
   }
 
   return (
@@ -135,6 +136,7 @@ export default function Notifs({ route, navigation }) {
         <Button
           title="SEND NOTIFICATION"
           style={styles.sendNotif}
+          // onPress={schedulePushNotification}
           onPress={async () => {
             await schedulePushNotification();
           }}

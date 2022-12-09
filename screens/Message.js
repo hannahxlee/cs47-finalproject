@@ -4,6 +4,7 @@ import { Themes } from "../assets/Themes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 export const Message = ({ route, navigation }) => {
+  console.log("Name:", route.params.name);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.top}>
